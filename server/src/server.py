@@ -34,8 +34,8 @@ def message_recieve(client, server, message):
             #どの表情をどの手にするかの決定
 
             #clientへの通知
-            server.send_message(client,json.dumps({"type":"Matching","res": "Found","gu-": ,"tyoki":,"pa-": }))
-            server.send_message(rival,json.dumps({"type":"Matching","res": "Found","gu-": ,"tyoki":,"pa-": }))
+            server.send_message(client,json.dumps({"type":"Matching","res": "Found"}))
+            server.send_message(rival,json.dumps({"type":"Matching","res": "Found"}))
 
     #判定処理
     if data_json['type'] == "Judgment":
@@ -47,11 +47,11 @@ def message_recieve(client, server, message):
             if client in matching_list[i]:
                 matching_list.remove(matching_list[i])
 
-    　　#結果の送信
+        #結果の送信
 
 #コネクション切断時の処理
 def client_left(client,server):
-
+    return
 
 server = WebsocketServer(7532, host="0.0.0.0")
 server.set_fn_new_client(new_client)
