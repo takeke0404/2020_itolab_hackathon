@@ -1,0 +1,13 @@
+version: '3.7'
+
+services:
+  websocket:
+    build: .
+    ports:
+      - "7532:7532"
+    volumes:
+      - "./src:/projects"
+    tty: true
+    environment:
+      TZ: Asia/Tokyo
+    command: python server.py
