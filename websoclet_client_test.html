@@ -10,9 +10,12 @@
 <body>
 <section class="section" id="app">
     <div class="container">
-        <input type="text" class="input" v-model="text" @keyup.enter="send"/>
-        <p v-for="text in messages">{{text}}</p>
+        <button v-on:click="matching">Matching Test</button>
+        <br><br>
+        <!--<button v-on:click="judgment">Judgment Test</button>-->
     </div>
+    <br>
+    <p v-for="text in messages">{{text}}</p>
 </section>
 
 <script>
@@ -35,8 +38,18 @@ const vm = new Vue({
         }
     },
     methods: {
-        send: function() {
-            this.ws.send(this.text)
+        matching: function() {
+            json = {
+                "type" : "Matching"
+            }
+            this.ws.send(JSON.stringify(json))
+            this.text = ''
+        },
+        judgment: function() {
+            json = {
+                "type" : "Judgment"
+            }
+            this.ws.send(JSON.stringify(json))
             this.text = ''
         }
     }
