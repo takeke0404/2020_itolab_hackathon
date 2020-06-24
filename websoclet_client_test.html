@@ -1,22 +1,46 @@
-<html>
-<head>
-  <script src="http://code.jquery.com/jquery-latest.min.js">
-  </script>
-  <script>
-    $(function(){
-      var ws = new WebSocket("ws://localhost:7532/");
-      var log = "";
-      ws.onmessage = function(message){
-        log = log + "<br>" + message.data;
-        document.getElementById("txt").innerHTML = log;
-      }
-    })
-  </script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Template</title>
+<!--CSS-->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+<style>
+</style>
+<!-- load JavaScripts-->
+<script src="https://cdn.jsdelivr.net/npm/vue@2.5.15/dist/vue.js"></script>
 </head>
-
 <body>
-  message: <br>
-  <div id = "txt"></div>
-</body>
+<section class="section" id="app">
+    <div class="container">
+        <input type="text" class="input" v-model="text" @keyup.enter="send"/>
+        <p v-for="text in messages">{{text}}</p>
+    </div>
+</section>
 
+<script>
+const vm = new Vue({
+    el: '#app',
+    data: {
+        text: '',
+        messages: [],
+        ws: new WebSocket("ws://localhost:7532/")
+    },
+    mounted: function () {
+        // WebSocketのコネクション開いた初回の動作
+        this.ws.onopen = () => {
+
+        }
+
+        // サーバからWebSocketコネクション経由でなんか来た時の動作
+        this.ws.onmessage = (evt) => {
+            this.messages.push(evt.data)
+        }
+    },
+    methods: {
+        send: function() {
+            this.ws.send(this.text)
+            this.text = ''
+        }
+    }
+})
+</script>
+</body>
 </html>
