@@ -5,8 +5,9 @@ from collections import deque
 
 #properties
 matching_queue = deque()#マッチング待機キュー
-matching_list = deque()#対戦ペアを格納するリスト
-judgment_queue = deque()#結果待機キュー
+matching_list = list()#対戦ペアを格納するリスト
+matching_user = list()#対戦状態にあるクライアントのリスト
+judgment_list = list()#結果待機リスト
 
 #コネクション接続時に呼ばれる関数
 def new_client(client, server):
@@ -25,6 +26,12 @@ def message_recieve(client, server, message):
     #connect(マッチング処理)
     if data_json['type'] == "Matching":
         #既にマッチング済み、待機キューに追加済みの際のエラー処理
+        if client in matching_queue:
+            server.send_message(client,json.dumps({"type":"Matching","res": "Waiting" }))
+            return
+        elif client in matching_user:
+            server.send_message(client,json.dumps({"type":"Matching","res": "Exist" }))
+            return
 
         #マッチング不成立ならマッチングの待機キューに追加
         if len(matching_queue) == 0:
@@ -32,10 +39,17 @@ def message_recieve(client, server, message):
             server.send_message(client,json.dumps({"type":"Matching","res": "Waiting" }))
         else:
             rival = matching_queue.pop()
-            #どの表情をどの手にするかの決定
-
             #対戦リストへの追加
-            matching_list.append([rival,client])
+            matching_card = [rival,client]
+            matching_list.append(matching_card)
+            matching_user.append(client)
+            matching_user.append(rival)
+            client['rival'] = rival
+            client['matching'] = matching_card
+            rival['rival'] = client
+            rival['matching'] = matching_card
+
+            #どの表情をどの手にするかの決定
 
             #clientへの通知
             server.send_message(client,json.dumps({"type":"Matching","res": "Found"}))
@@ -43,19 +57,27 @@ def message_recieve(client, server, message):
 
     #判定処理
     if data_json['type'] == "Judgment":
-        #jsonから画像を取得判定、相手が終わるまでjudgment_queueに格納
+        #jsonから画像を取得判定、相手が終わるまでjudgment_listに格納
 
 
         #対戦ペアをリストから削除
-        for i in range(len(matching_list)):
-            if client in matching_list[i]:
-                matching_list.remove(matching_list[i])
+        matching_list.remove(client['matching'])
 
         #結果の送信
 
 #コネクション切断時の処理
 def client_left(client,server):
-    return
+    #待機キューに存在する場合
+    if client in matching_queue:
+        matching_queue.remove(client)
+        return
+    #対戦中
+    if client in matching_user:
+        matching_list.remove(client['matching'])
+        matching_user.remove(client)
+        matching_user.remove(client['rival'])
+        server.send_message(client['rival'],json.dumps({"type":"Warning","res": "Leave" }))
+        return
 
 server = WebsocketServer(7532, host="0.0.0.0")
 server.set_fn_new_client(new_client)
