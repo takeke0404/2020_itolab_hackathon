@@ -30,7 +30,7 @@ def message_recieve(client, server, message):
             server.send_message(client,json.dumps({"type":"Matching","res": "Waiting" }))
             return
         elif client in matching_user:
-            server.send_message(client,json.dumps({"type":"Matching","res": "Exist" }))
+            server.send_message(client,json.dumps({"type":"Warning","res": "Exist" }))
             return
 
         #マッチング不成立ならマッチングの待機キューに追加
@@ -57,13 +57,20 @@ def message_recieve(client, server, message):
 
     #判定処理
     if data_json['type'] == "Judgment":
+        if client not in matching_user:
+            server.send_message(client,json.dumps({"type":"Warning", "res":"Not Matching"}))
+            return
         #jsonから画像を取得判定、相手が終わるまでjudgment_listに格納
 
 
         #対戦ペアをリストから削除
         matching_list.remove(client['matching'])
+        matching_user.remove(client)
+        matching_user.remove(client['rival'])
 
         #結果の送信
+        server.send_message(client,json.dumps({"type":"Judgment","res": "Result"}))
+        server.send_message(client['rival'],json.dumps({"type":"Judgment","res": "Result"}))
 
 #コネクション切断時の処理
 def client_left(client,server):
