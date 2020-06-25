@@ -1,1 +1,5 @@
 websocket-server
+numpy
+opencv-python
+tensorflow
+keras

@@ -12,7 +12,11 @@
     <div class="container">
         <button v-on:click="matching">Matching Test</button>
         <br><br>
-        <!--<button v-on:click="judgment">Judgment Test</button>-->
+        <img v-show='uploadedImage' :src="uploadedImage">
+        <br>
+        <input type="file" v-on:change="onFileChange">
+        <br><br>
+        <button v-on:click="judgment">Judgment Test</button>
     </div>
     <br>
     <p v-for="text in messages">{{text}}</p>
@@ -22,14 +26,13 @@
 const vm = new Vue({
     el: '#app',
     data: {
-        text: '',
         messages: [],
+        uploadedImage: '',
         ws: new WebSocket("ws://localhost:7532/")
     },
     mounted: function () {
         // WebSocketのコネクション開いた初回の動作
         this.ws.onopen = () => {
-
         }
 
         // サーバからWebSocketコネクション経由でなんか来た時の動作
@@ -38,20 +41,34 @@ const vm = new Vue({
         }
     },
     methods: {
+        //マッチング開始時に送るjson
         matching: function() {
             json = {
                 "type" : "Matching"
             }
             this.ws.send(JSON.stringify(json))
-            this.text = ''
         },
+        //判定開始時に送るjson
         judgment: function() {
             json = {
                 "type" : "Judgment"
             }
+            //画像をjsonに追加
+            json.image = this.uploadedImage;
             this.ws.send(JSON.stringify(json))
-            this.text = ''
-        }
+        },
+        //以下2つは画像アップロード用メソッド
+        onFileChange(e) {
+            let files = e.target.files || e.dataTransfer.files;
+            this.createImage(files[0]);
+        },
+        createImage(file) {
+            let reader = new FileReader();
+            reader.onload = (e) => {
+                this.uploadedImage = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        },
     }
 })
 </script>

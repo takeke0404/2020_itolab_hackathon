@@ -24,14 +24,18 @@ def message_recieve(client, server, message):
 
     #connect(マッチング処理)
     if data_json['type'] == "Matching":
+        #既にマッチング済み、待機キューに追加済みの際のエラー処理
+
         #マッチング不成立ならマッチングの待機キューに追加
         if len(matching_queue) == 0:
             matching_queue.append(client)
             server.send_message(client,json.dumps({"type":"Matching","res": "Waiting" }))
         else:
             rival = matching_queue.pop()
-            matching_list.append([rival,client])
             #どの表情をどの手にするかの決定
+
+            #対戦リストへの追加
+            matching_list.append([rival,client])
 
             #clientへの通知
             server.send_message(client,json.dumps({"type":"Matching","res": "Found"}))
@@ -43,7 +47,7 @@ def message_recieve(client, server, message):
 
 
         #対戦ペアをリストから削除
-        for i in matching_list:
+        for i in range(len(matching_list)):
             if client in matching_list[i]:
                 matching_list.remove(matching_list[i])
 
