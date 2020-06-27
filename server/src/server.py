@@ -8,7 +8,10 @@ import random
 import cv2
 import base64
 import numpy as np
+<<<<<<< HEAD
 import io
+=======
+>>>>>>> 1d94a13bbf04a8bb6bbb88818706badc83506b09
 
 #properties
 matching_queue = deque()#マッチング待機キュー
@@ -71,10 +74,20 @@ def message_recieve(client, server, message):
         if client not in matching_user:
             server.send_message(client,json.dumps({"type":"Warning", "res":"Not Matching"}))
             return
+
+
+        
         #jsonから画像を取得判定、相手が終わるまでjudgment_listに格納
         img_base64 = data_json['image']
+<<<<<<< HEAD
         #画僧が送信されてない際の処理
         if img_base64 == "":
+=======
+        img_np = np.fromstring(img_base64, np.uint8)
+        img = cv2.cvtColor(img_np, cv2.COLOR_RGBA2BGR)
+    
+        if img is None:
+>>>>>>> 1d94a13bbf04a8bb6bbb88818706badc83506b09
             server.send_message(client,json.dumps({"type":"Judgment","res":"Not Image"}))
         else:
             img_base = img_base64.split(',')
@@ -83,9 +96,13 @@ def message_recieve(client, server, message):
             img = cv2.imdecode(jpg, cv2.IMREAD_COLOR)
 
             #画像から表情推定の結果を返す(顔ではない画像に対応なし)
+<<<<<<< HEAD
             pre = prediction.Prediction()
             result = pre.run(img,hand_list[client['matching'][2]])
             print(result)
+=======
+            result = prediction.run(img,client['matching'][2])
+>>>>>>> 1d94a13bbf04a8bb6bbb88818706badc83506b09
 
             #対戦相手が画僧を送信していなければjudgment_listに格納して待機
             for judgment_data in judgment_list:
@@ -121,6 +138,7 @@ def client_left(client,server):
         matching_user.remove(client['rival'])
         server.send_message(client['rival'],json.dumps({"type":"Warning","res": "Leave" }))
         return
+
 
 server = WebsocketServer(7532, host="0.0.0.0")
 server.set_fn_new_client(new_client)
