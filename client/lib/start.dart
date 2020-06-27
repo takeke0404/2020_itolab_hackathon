@@ -13,6 +13,7 @@ class StartPage extends StatefulWidget {
 class _StartPageState extends State<StartPage> {
   @override
   Widget build(BuildContext context) {
+
     return new Scaffold(
       appBar: new AppBar(
         title: new Text('表情じゃんけん'),
@@ -24,7 +25,7 @@ class _StartPageState extends State<StartPage> {
               Text('Start'),
               RaisedButton(
                 onPressed:
-                    () => Navigator.of(context).pushReplacementNamed('/websocket'),
+                    () => Navigator.of(context).pushNamed('/websocket'),
                 child: new Text('サーバーに接続'),
               )
             ],

@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import './util.dart';
+import './websocket.dart';
+
 
 import 'dart:async';
 import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:path_provider/path_provider.dart';
+
 
 List<CameraDescription> cameras = [];
 
@@ -27,8 +30,10 @@ class CameraPage extends StatefulWidget {
 
 class _CameraPageState extends State<CameraPage>
     with WidgetsBindingObserver {
+
   CameraController controller;
   String imagePath;
+  Image image;
   bool enableAudio = true;
 
   @override
@@ -102,7 +107,6 @@ class _CameraPageState extends State<CameraPage>
               mainAxisAlignment: MainAxisAlignment.start,
               children: <Widget>[
                 _cameraTogglesRowWidget(),
-                _thumbnailWidget(),
               ],
             ),
           ),
@@ -166,16 +170,6 @@ class _CameraPageState extends State<CameraPage>
           icon: new Icon(Icons.camera_alt),
           label: Text("顔を撮影"),
         )
-        /*
-        IconButton(
-          icon: const Icon(Icons.camera_alt),
-          color: Colors.blue,
-          onPressed: controller != null &&
-              controller.value.isInitialized &&
-              !controller.value.isRecordingVideo
-              ? onTakePictureButtonPressed
-              : null,
-        )*/
       ],
     );
   }
@@ -250,11 +244,17 @@ class _CameraPageState extends State<CameraPage>
         });
         if (filePath != null) {
           //showInSnackBar('Picture saved to $filePath');
+          image = new Image.file(File(imagePath));
           _showDialog();
         }
 
       }
     });
+  }
+
+  void confirmDialog() {
+    Navigator.pop(context);
+    sendImage(imagePath);
   }
 
   Future _showDialog() async {
@@ -265,7 +265,7 @@ class _CameraPageState extends State<CameraPage>
           content: SingleChildScrollView (
             child : ListBody(
               children : <Widget> [
-                  new Image.file(File(imagePath)),
+                  image
               ]
             ),
           ),
@@ -276,7 +276,7 @@ class _CameraPageState extends State<CameraPage>
               ),
               FlatButton(
                 child: Text("OK"),
-                onPressed: () => Navigator.pop(context),
+                onPressed: confirmDialog,
               ),
             ]
       )
