@@ -6,6 +6,8 @@ import prediction
 import itertools
 import random
 import cv2
+import base64
+import numpy as np
 
 #properties
 matching_queue = deque()#マッチング待機キュー
@@ -67,9 +69,14 @@ def message_recieve(client, server, message):
         if client not in matching_user:
             server.send_message(client,json.dumps({"type":"Warning", "res":"Not Matching"}))
             return
+
+
+        
         #jsonから画像を取得判定、相手が終わるまでjudgment_listに格納
-        img = cv2.imread(test.jpg)
-        #画僧が送信されてない際の処理
+        img_base64 = data_json['image']
+        img_np = np.fromstring(img_base64, np.uint8)
+        img = cv2.cvtColor(img_np, cv2.COLOR_RGBA2BGR)
+    
         if img is None:
             server.send_message(client,json.dumps({"type":"Judgment","res":"Not Image"}))
             return
@@ -112,6 +119,7 @@ def client_left(client,server):
         matching_user.remove(client['rival'])
         server.send_message(client['rival'],json.dumps({"type":"Warning","res": "Leave" }))
         return
+
 
 server = WebsocketServer(7532, host="0.0.0.0")
 server.set_fn_new_client(new_client)
