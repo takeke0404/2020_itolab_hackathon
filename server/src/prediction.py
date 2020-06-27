@@ -64,7 +64,7 @@ class Prediction:
         pImg = self.preprocessor(img, face_rect)
         prediction = Prediction.emotions_detector.predict(pImg)[0]
 
-        result = [(Prediction.classes[i] , prediction[i]) for i in range(len(Prediction.classes))]
+        result = [(i , prediction[i]) for i in range(len(Prediction.classes))]
         return result, face_rect
 
     def select_hand_randomly(self,unused_faces=["disgust"]):

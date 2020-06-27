@@ -54,7 +54,7 @@ const vm = new Vue({
                 "type" : "Judgment"
             }
             //画像をjsonに追加
-            json.image = btoa(this.uploadedImage);
+            json.image = this.uploadedImage;
             this.ws.send(JSON.stringify(json))
         },
         //以下2つは画像アップロード用メソッド
