@@ -76,6 +76,7 @@ def message_recieve(client, server, message):
         #画僧が送信されてない際の処理
         if img_base64 == "":
             server.send_message(client,json.dumps({"type":"Judgment","res":"Not Image"}))
+            return
         else:
             img_base = img_base64.split(',')
             img_binary = base64.b64decode(img_base[1])
@@ -86,6 +87,9 @@ def message_recieve(client, server, message):
             pre = prediction.Prediction()
             result = pre.run(img,hand_list[client['matching'][2]])
             print(result)
+            if result == -1:
+                server.send_message(client,json.dumps({"type":"Judgment","res":"Not Face"}))
+                return
 
             #対戦相手が画僧を送信していなければjudgment_listに格納して待機
             for judgment_data in judgment_list:

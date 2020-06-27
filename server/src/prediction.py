@@ -59,6 +59,9 @@ class Prediction:
     def classify_emotion(self,img):
         gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         faces = Prediction.faces_detector.detectMultiScale(gray_img)
+        print(type(faces))
+        if isinstance(faces, tuple):
+            return -1,-1
         face_rect = faces[0]
 
         pImg = self.preprocessor(img, face_rect)
@@ -91,6 +94,8 @@ class Prediction:
 
     def run(self,img,hand):
         result, face_rect = self.classify_emotion(img)
+        if result == -1:
+            return -1
 
         # 各手に対応した表情の取り出し
         prob = [(0, *result[hand[0]]) , (1, *result[hand[1]]), (2, *result[hand[2]])]
