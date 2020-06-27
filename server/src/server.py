@@ -6,6 +6,9 @@ import prediction
 import itertools
 import random
 import cv2
+import base64
+import numpy as np
+import io
 
 #properties
 matching_queue = deque()#マッチング待機キュー
@@ -19,6 +22,7 @@ hand_list = list(itertools.permutations(classes, 3)) #どの表情をどの手�
 def new_client(client, server):
     #コネクションを確立している全体に送信
     server.send_message_to_all(datetime.now().isoformat() + ": new client joined!")
+
 
 #クライアント側からメッセージが飛んできたとき
 def message_recieve(client, server, message):
@@ -59,8 +63,8 @@ def message_recieve(client, server, message):
 
 
             #clientへの通知
-            server.send_message(client,json.dumps({"type":"Matching","res": "Found"}))
-            server.send_message(rival,json.dumps({"type":"Matching","res": "Found"}))
+            server.send_message(client,json.dumps({"type":"Matching","res": "Found","Hand":hand_list[hand_num]}))
+            server.send_message(rival,json.dumps({"type":"Matching","res": "Found","Hand":hand_list[hand_num]}))
 
     #判定処理
     if data_json['type'] == "Judgment":
@@ -68,36 +72,41 @@ def message_recieve(client, server, message):
             server.send_message(client,json.dumps({"type":"Warning", "res":"Not Matching"}))
             return
         #jsonから画像を取得判定、相手が終わるまでjudgment_listに格納
-        img = cv2.imread(test.jpg)
+        img_base64 = data_json['image']
         #画僧が送信されてない際の処理
-        if img is None:
+        if img_base64 == "":
             server.send_message(client,json.dumps({"type":"Judgment","res":"Not Image"}))
-            return
         else:
+            img_base = img_base64.split(',')
+            img_binary = base64.b64decode(img_base[1])
+            jpg=np.frombuffer(img_binary,dtype=np.uint8)
+            img = cv2.imdecode(jpg, cv2.IMREAD_COLOR)
+
             #画像から表情推定の結果を返す(顔ではない画像に対応なし)
-            result = prediction.run(img,client['matching_card'][2])
+            pre = prediction.Prediction()
+            result = pre.run(img,hand_list[client['matching'][2]])
+            print(result)
 
             #対戦相手が画僧を送信していなければjudgment_listに格納して待機
-            if client['rival'] not in judgment_list[:][0]:
-                judgment_list.append(client,result)
-                server.send_message(client,json.dumps({"type":"Judgment","res":"Waiting"}))
-                return
-            else:
-                for judgment_data in judgment_list:
-                    if client['rival'] == judgment_data[0]:
-                        rival_result = judgment_data[1]
-                        client_result = result
-                        #結果の送信
-                        server.send_message(client,json.dumps({"type":"Judgment","res":"Result","your_hand":client_result[0],"your_emotion":client_result[1],"your_prob":client_result[2],"hand":rival_result[0],"emotion":rival_result[1],"prob":rival_result[2]}))
-                        server.send_message(client['rival'],json.dumps({"type":"Judgment","res":"Result","your_hand":rival_result[0],"your_emotion":rival_result[1],"your_prob":rival_result[2],"hand":client_result[0],"emotion":client_result[1],"prob":client_result[2]}))
-        #対戦ペアをリストから削除
-        matching_list.remove(client['matching'])
-        matching_user.remove(client)
-        matching_user.remove(client['rival'])
+            for judgment_data in judgment_list:
+                if client['rival'] == judgment_data[0]:
+                    rival_result = judgment_data[1]
+                    client_result = result
 
-        # #結果の送信
-        # server.send_message(client,json.dumps({"type":"Judgment","res": "Result"}))
-        # server.send_message(client['rival'],json.dumps({"type":"Judgment","res": "Result"}))
+                    #対戦ペアをリストから削除
+                    matching_list.remove(client['matching'])
+                    matching_user.remove(client)
+                    matching_user.remove(client['rival'])
+                    
+                    #結果の送信
+                    server.send_message(client,json.dumps({"type":"Judgment","res":"Result","your_hand":client_result[0],"your_emotion":client_result[1],"your_prob":str(client_result[2]),"hand":rival_result[0],"emotion":rival_result[1],"prob":str(rival_result[2])}))
+                    server.send_message(client['rival'],json.dumps({"type":"Judgment","res":"Result","your_hand":rival_result[0],"your_emotion":rival_result[1],"your_prob":str(rival_result[2]),"hand":client_result[0],"emotion":client_result[1],"prob":str(client_result[2])}))
+                    return
+
+            judgment_list.append([client,result])
+            server.send_message(client,json.dumps({"type":"Judgment","res":"Waiting"}))
+            return
+
 
 #コネクション切断時の処理
 def client_left(client,server):
