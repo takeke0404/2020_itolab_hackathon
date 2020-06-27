@@ -82,7 +82,7 @@ def message_recieve(client, server, message):
             return
         else:
             #画像から表情推定の結果を返す(顔ではない画像に対応なし)
-            result = prediction.run(img,client['matching_card'][2])
+            result = prediction.run(img,client['matching'][2])
 
             #対戦相手が画僧を送信していなければjudgment_listに格納して待機
             if client['rival'] not in judgment_list[:][0]:
