@@ -21,13 +21,13 @@ hand_list = list(itertools.permutations(classes, 3)) #どの表情をどの手�
 #コネクション接続時に呼ばれる関数
 def new_client(client, server):
     #コネクションを確立している全体に送信
-    server.send_message_to_all(datetime.now().isoformat() + ": new client joined!")
+    #server.send_message_to_all(datetime.now().isoformat() + ": new client joined!")
 
 
 #クライアント側からメッセージが飛んできたとき
 def message_recieve(client, server, message):
     #メッセージを送ってきたクライアントに送信
-    server.send_message(client,"client send : " + message)
+    #server.send_message(client,"client send : " + message)
     print(message)
 
     #jsonのparse
