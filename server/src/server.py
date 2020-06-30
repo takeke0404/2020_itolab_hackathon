@@ -22,16 +22,17 @@ hand_list = list(itertools.permutations(classes, 3)) #どの表情をどの手�
 def new_client(client, server):
     #コネクションを確立している全体に送信
     #server.send_message_to_all(datetime.now().isoformat() + ": new client joined!")
+    print(datetime.now().isoformat() + ": new client joined!:" + ",".join(client['address']))
     return
 
 #クライアント側からメッセージが飛んできたとき
 def message_recieve(client, server, message):
     #メッセージを送ってきたクライアントに送信
     #server.send_message(client,"client send : " + message)
-    print(message)
 
     #jsonのparse
     data_json = json.loads(message)
+    print(data_json['type'])
 
     #connect(マッチング処理)
     if data_json['type'] == "Matching":
@@ -78,8 +79,7 @@ def message_recieve(client, server, message):
             server.send_message(client,json.dumps({"type":"Judgment","res":"Not Image"}))
             return
         else:
-            img_base = img_base64.split(',')
-            img_binary = base64.b64decode(img_base[1])
+            img_binary = base64.b64decode(img_base64)
             jpg=np.frombuffer(img_binary,dtype=np.uint8)
             img = cv2.imdecode(jpg, cv2.IMREAD_COLOR)
 
@@ -114,6 +114,7 @@ def message_recieve(client, server, message):
 
 #コネクション切断時の処理
 def client_left(client,server):
+    print(datetime.now().isoformat() + ": client left! :" +",".join(client['address']))
     #待機キューに存在する場合
     if client in matching_queue:
         matching_queue.remove(client)
