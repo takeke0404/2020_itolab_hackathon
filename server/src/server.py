@@ -22,7 +22,7 @@ hand_list = list(itertools.permutations(classes, 3)) #どの表情をどの手�
 def new_client(client, server):
     #コネクションを確立している全体に送信
     #server.send_message_to_all(datetime.now().isoformat() + ": new client joined!")
-    print(datetime.now().isoformat() + ": new client joined!:" + ','.join(client['address']))
+    print(datetime.now().isoformat() + ": new client joined!:" + ','.join(map(str,client['address'])))
     return
 
 #クライアント側からメッセージが飛んできたとき
@@ -114,7 +114,7 @@ def message_recieve(client, server, message):
 
 #コネクション切断時の処理
 def client_left(client,server):
-    print(datetime.now().isoformat() + ": client left! :" +','.join(client['address']))
+    print(datetime.now().isoformat() + ": client left! :" +','.join(map(str,client['address'])))
     #待機キューに存在する場合
     if client in matching_queue:
         matching_queue.remove(client)
@@ -127,7 +127,7 @@ def client_left(client,server):
         server.send_message(client['rival'],json.dumps({"type":"Warning","res": "Leave" }))
         return
 
-server = WebsocketServer(7532, host="0.0.0.0")
+server = WebsocketServer(58822, host="0.0.0.0")
 server.set_fn_new_client(new_client)
 server.set_fn_message_received(message_recieve)
 server.set_fn_client_left(client_left)
