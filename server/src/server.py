@@ -22,7 +22,7 @@ hand_list = list(itertools.permutations(classes, 3)) #どの表情をどの手�
 def new_client(client, server):
     #コネクションを確立している全体に送信
     #server.send_message_to_all(datetime.now().isoformat() + ": new client joined!")
-
+    return
 
 #クライアント側からメッセージが飛んできたとき
 def message_recieve(client, server, message):
