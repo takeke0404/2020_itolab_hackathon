@@ -40,6 +40,18 @@ class _CameraPageState extends State<CameraPage>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+
+    CameraDescription c;
+    if (cameras.length >= 2) {
+      CameraDescription c = cameras[1];
+      onNewCameraSelected(c);
+    }
+    else if(cameras.length == 1) {
+      CameraDescription c = cameras[0];
+      onNewCameraSelected(c);
+    }
+    else {
+    }
   }
 
   @override
@@ -72,46 +84,19 @@ class _CameraPageState extends State<CameraPage>
       appBar: AppBar(
         title: const Text('表情じゃんけん'),
       ),
-      body: Column(
-        children: <Widget>[
-          Row (
+      body:
+          Stack(
             children: <Widget>[
-              Image.asset("images/gu.jpg"),
-              Image.asset("images/choki.png"),
-              Image.asset("images/pa.png"),
-            ]
-          ),
-          Expanded(
-            child: Container(
-              child: Padding(
-                padding: const EdgeInsets.all(1.0),
-                child: Center(
-                  child: _cameraPreviewWidget(),
-                ),
+              Center(
+                child: _cameraPreviewWidget(),
               ),
-              decoration: BoxDecoration(
-                color: Colors.black,
-                border: Border.all(
-                  color: controller != null && controller.value.isRecordingVideo
-                      ? Colors.redAccent
-                      : Colors.grey,
-                  width: 3.0,
-                ),
-              ),
-            ),
+              Align(
+                alignment : Alignment(0.0, 0.8),
+                child: _captureControlRowWidget(),
+              )
+            ],
+          fit: StackFit.expand,
           ),
-          _captureControlRowWidget(),
-          Padding(
-            padding: const EdgeInsets.all(5.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: <Widget>[
-                _cameraTogglesRowWidget(),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -119,7 +104,7 @@ class _CameraPageState extends State<CameraPage>
   Widget _cameraPreviewWidget() {
     if (controller == null || !controller.value.isInitialized) {
       return const Text(
-        'Tap a camera',
+        'カメラが取得できません',
         style: TextStyle(
           color: Colors.white,
           fontSize: 24.0,
@@ -134,26 +119,6 @@ class _CameraPageState extends State<CameraPage>
     }
   }
 
-  /// Display the thumbnail of the captured image or video.
-  Widget _thumbnailWidget() {
-    return Expanded(
-      child: Align(
-        alignment: Alignment.centerRight,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            imagePath == null
-                ? Container()
-                : SizedBox(
-              child: Image.file(File(imagePath)),
-              width: 64.0,
-              height: 84.0,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   /// Display the control bar with buttons to take pictures and record videos.
   Widget _captureControlRowWidget() {
@@ -174,36 +139,6 @@ class _CameraPageState extends State<CameraPage>
     );
   }
 
-  /// Display a row of toggle to select the camera (or a message if no camera is available).
-  Widget _cameraTogglesRowWidget() {
-    final List<Widget> toggles = <Widget>[];
-
-    if (cameras.isEmpty) {
-      return const Text('No camera found');
-    } else {
-      bool tmp = true;
-      for (CameraDescription cameraDescription in cameras) {
-        toggles.add(
-          SizedBox(
-            width: 90.0,
-            child: RadioListTile<CameraDescription>(
-              title: Icon(getCameraLensIcon(cameraDescription.lensDirection)),
-              groupValue: controller?.description,
-              value: cameraDescription,
-              onChanged: controller != null && controller.value.isRecordingVideo
-                  ? null
-                  : onNewCameraSelected,
-              selected: tmp,
-            ),
-          ),
-        );
-        tmp = false;
-      }
-    }
-
-    return Row(children: toggles);
-  }
-
   String timestamp() => DateTime.now().millisecondsSinceEpoch.toString();
 
   void showInSnackBar(String message) {
@@ -217,7 +152,7 @@ class _CameraPageState extends State<CameraPage>
     controller = CameraController(
       cameraDescription,
       ResolutionPreset.medium,
-      enableAudio: enableAudio,
+      enableAudio: false,
     );
 
     // If the controller is updated then update the UI.
@@ -315,3 +250,86 @@ class _CameraPageState extends State<CameraPage>
     showInSnackBar('Error: ${e.code}\n${e.description}');
   }
 }
+
+/*
+          Expanded(
+            child: Container(
+              child: Padding(
+                padding: const EdgeInsets.all(1.0),
+                child: Center(
+                  child: _cameraPreviewWidget(),
+                ),
+              ),
+              decoration: BoxDecoration(
+                color: Colors.black,
+                border: Border.all(
+                  color: controller != null && controller.value.isRecordingVideo
+                      ? Colors.redAccent
+                      : Colors.grey,
+                  width: 3.0,
+                ),
+              ),
+            ),
+          ),
+          _captureControlRowWidget(),
+          Padding(
+            padding: const EdgeInsets.all(5.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: <Widget>[
+                _cameraTogglesRowWidget(),
+              ],
+            ),
+          ),
+
+
+  /// Display a row of toggle to select the camera (or a message if no camera is available).
+  Widget _cameraTogglesRowWidget() {
+    final List<Widget> toggles = <Widget>[];
+
+    if (cameras.isEmpty) {
+      return const Text('No camera found');
+    } else {
+      bool tmp = true;
+      for (CameraDescription cameraDescription in cameras) {
+        toggles.add(
+          SizedBox(
+            width: 90.0,
+            child: RadioListTile<CameraDescription>(
+              title: Icon(getCameraLensIcon(cameraDescription.lensDirection)),
+              groupValue: controller?.description,
+              value: cameraDescription,
+              onChanged: controller != null && controller.value.isRecordingVideo
+                  ? null
+                  : onNewCameraSelected,
+              selected: tmp,
+            ),
+          ),
+        );
+        tmp = false;
+      }
+    }
+
+    return Row(children: toggles);
+  }
+  /// Display the thumbnail of the captured image or video.
+  Widget _thumbnailWidget() {
+    return Expanded(
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            imagePath == null
+                ? Container()
+                : SizedBox(
+              child: Image.file(File(imagePath)),
+              width: 64.0,
+              height: 84.0,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+ */

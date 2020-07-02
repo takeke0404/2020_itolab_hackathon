@@ -16,8 +16,8 @@ MyChannel gl_channel;
 
 class MyChannel {
   IOWebSocketChannel channel;
-  List<String> face_classes;
-  List<int> hands;
+  List<List<String>> face_classes;
+  List<List<String>> hands;
 
   void match() {
     var json = jsonEncode({'type': 'Matching'});
@@ -46,13 +46,13 @@ class MyChannel {
 
   MyChannel(String URL, _WebSocketPageState s) {
     this.face_classes = [
-        'angry',
-        'disgust',
-        'fear',
-        'happy',
-        'sad',
-        'surprise',
-        'neutral'
+        ['angry', '😡'],
+        ['disgust', '💩'],
+        ['fear', '😱'],
+        ['happy', '😆'],
+        ['sad', '😭'],
+        ['surprise', '🙀'],
+        ['neutral', '😐']
     ];
 
     this.notify_state = s;
@@ -96,22 +96,20 @@ class MyChannel {
         break;
     }
   }
-  bool wait_flg = false;
+
   void _wait() {
-    //this.notify_state.setState(() {this.notify_state.flag = true;});
-    notify_state.setFlag(false);
-    notify_state.setConnectionState("マッチング中");
+    notify_state.setLoadingFlag(false);
+    notify_state.setConnectionState("マッチング中✊");
     print("wait");
   }
 
   void _found(var json) {
-    //this.notify_state.setState(() {this.notify_state.flag = false;});
-    notify_state.setFlag(false);
+    notify_state.setLoadingFlag(false);
     notify_state.setConnectionState("マッチング完了!!");
     print("found");
-    this.hands = [json["gu"], json["tyoki"], json["pa"]];
-
-
+    this.hands = [face_classes[json["gu"]], face_classes[json["tyoki"]], face_classes[json["pa"]]];
+    print(this.hands[0][1]);
+    notify_state.setJankenHands(this.hands);
   }
 
   void close() {
@@ -129,12 +127,12 @@ class WebSocketPage extends StatefulWidget {
 }
 
 class _WebSocketPageState extends State<WebSocketPage> {
-  bool flag = true;
+  bool loading_flag = true;
   String connection_state = "通信中";
 
-  void setFlag(var f) {
+  void setLoadingFlag(var f) {
     this.setState(() {
-      this.flag = f;
+      this.loading_flag = f;
     });
   }
 
@@ -143,13 +141,17 @@ class _WebSocketPageState extends State<WebSocketPage> {
       this.connection_state = s;
     });
   }
+  void setJankenHands(var j) {
+    this.setState(() {
+      hands = j;
+    });
+  }
 
   @override
   void initState() {
     super.initState();
     gl_channel = MyChannel(URL, this);
     gl_channel.match();
-    print("aa");
   }
 
   @override
@@ -161,9 +163,18 @@ class _WebSocketPageState extends State<WebSocketPage> {
       body: new ModalProgressHUD(
           child : new Container(
             padding: new EdgeInsets.all(32.0),
-            child: buildMatchForm(context),
+            child: Center(
+              child: Container(
+                child: Column(
+                  children: <Widget>[
+                    buildMatchForm(context),
+                    (hands != null) ? buildJanken2Face(context) : SizedBox.shrink() ,
+                  ],
+                ),
+              ),
+            ),
           ),
-        inAsyncCall: this.flag,
+        inAsyncCall: this.loading_flag,
         progressIndicator:  CircularProgressIndicator(semanticsLabel: "aaa",
         )
       ),
@@ -171,8 +182,7 @@ class _WebSocketPageState extends State<WebSocketPage> {
   }
 
   Widget buildMatchForm(BuildContext context) {
-    return new Center(
-      child: new Column(
+    return Column(
         children: <Widget>[
           Text(connection_state),
           RaisedButton(
@@ -180,29 +190,40 @@ class _WebSocketPageState extends State<WebSocketPage> {
             => Navigator.of(context).pushNamed("/camera"),
             child: new Text('cameraへ'),
           ),
-          Container(
-            child : Column(
-              children : <Widget>[
-                Row(
-                  children : <Widget>[
-                    Image.asset(
-                      "images/gu.png",
-                      //fit: BoxFit.cover,
-                    ),
-                    Image.asset(
-                      "images/pa.png",
-                      fit: BoxFit.cover,
-                    )
-                  ]
+        ]
+    );
+  }
+
+  var hands;
+  Widget buildJanken2Face(BuildContext context) {
+    Widget getHandText(String hand, List<String> face) {
+      return Center(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Text(
+                "$hand : ${face[1]}",
+                style: TextStyle(
+                    fontSize: 50
                 )
-              ],
             ),
-          ),
+            Text(
+                "(${face[0]})"
+            )
+          ],
+        )
+      );
+    }
+    return Center(
+      child: new Column(
+        children: <Widget>[
+          getHandText("✊", hands[0]),
+          getHandText("✌️", hands[1]),
+          getHandText("✋", hands[2]),
         ],
       ),
     );
   }
-
 
   @override
   void dispose() {
