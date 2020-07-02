@@ -77,7 +77,7 @@ class _CameraPageState extends State<CameraPage>
           Row (
             children: <Widget>[
               Image.asset("images/gu.jpg"),
-              Image.asset("images/choki.jpeg"),
+              Image.asset("images/choki.png"),
               Image.asset("images/pa.png"),
             ]
           ),
@@ -181,6 +181,7 @@ class _CameraPageState extends State<CameraPage>
     if (cameras.isEmpty) {
       return const Text('No camera found');
     } else {
+      bool tmp = true;
       for (CameraDescription cameraDescription in cameras) {
         toggles.add(
           SizedBox(
@@ -192,9 +193,11 @@ class _CameraPageState extends State<CameraPage>
               onChanged: controller != null && controller.value.isRecordingVideo
                   ? null
                   : onNewCameraSelected,
+              selected: tmp,
             ),
           ),
         );
+        tmp = false;
       }
     }
 
@@ -254,7 +257,7 @@ class _CameraPageState extends State<CameraPage>
 
   void confirmDialog() {
     Navigator.pop(context);
-    sendImage(imagePath);
+    gl_channel.sendImage(imagePath);
   }
 
   Future _showDialog() async {

@@ -33,12 +33,12 @@ class MyApp extends StatelessWidget {
         '/start' : (BuildContext context) => new StartPage(),
         '/websocket': (BuildContext context) => new WebSocketPage(),
         '/camera': (BuildContext context) => new CameraPage(),
-        '/subpage': (BuildContext context) => new SubPage()
       },
     );
   }
 }
 
+/*
 class SubPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -65,7 +65,7 @@ class SubPage extends StatelessWidget {
   }
 }
 
-/*
+
 
 
 

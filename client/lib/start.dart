@@ -18,7 +18,8 @@ class _StartPageState extends State<StartPage> {
       appBar: new AppBar(
         title: new Text('表情じゃんけん'),
       ),
-      body: new Center(
+      body:
+      new Center(
           child: new Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
