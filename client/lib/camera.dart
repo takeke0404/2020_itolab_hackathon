@@ -43,7 +43,7 @@ class _CameraPageState extends State<CameraPage>
 
     CameraDescription c;
     if (cameras.length >= 2) {
-      CameraDescription c = cameras[1];
+      CameraDescription c = cameras[0];
       onNewCameraSelected(c);
     }
     else if(cameras.length == 1) {
@@ -83,6 +83,20 @@ class _CameraPageState extends State<CameraPage>
       key: _scaffoldKey,
       appBar: AppBar(
         title: const Text('表情じゃんけん'),
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.camera_rear),
+            onPressed: () => setState(() {
+              onNewCameraSelected(cameras[0]);
+            }),
+          ),
+          IconButton(
+            icon: Icon(Icons.camera_front),
+            onPressed: () => setState(() {
+              onNewCameraSelected(cameras[1]);
+            }),
+          ),
+        ],
       ),
       body:
           Stack(
@@ -119,7 +133,6 @@ class _CameraPageState extends State<CameraPage>
     }
   }
 
-
   /// Display the control bar with buttons to take pictures and record videos.
   Widget _captureControlRowWidget() {
     return Row(
@@ -142,7 +155,7 @@ class _CameraPageState extends State<CameraPage>
   String timestamp() => DateTime.now().millisecondsSinceEpoch.toString();
 
   void showInSnackBar(String message) {
-    _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(message)));
+    Scaffold.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   void onNewCameraSelected(CameraDescription cameraDescription) async {
@@ -185,7 +198,6 @@ class _CameraPageState extends State<CameraPage>
           image = new Image.file(File(imagePath));
           _showDialog();
         }
-
       }
     });
   }
@@ -193,6 +205,7 @@ class _CameraPageState extends State<CameraPage>
   void confirmDialog() {
     Navigator.pop(context);
     gl_channel.sendImage(imagePath);
+    Navigator.pushNamed(context, '/result');
   }
 
   Future _showDialog() async {
@@ -249,6 +262,7 @@ class _CameraPageState extends State<CameraPage>
     logError(e.code, e.description);
     showInSnackBar('Error: ${e.code}\n${e.description}');
   }
+
 }
 
 /*

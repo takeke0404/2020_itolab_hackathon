@@ -4,6 +4,8 @@ import 'package:camera/camera.dart';
 void logError(String code, String message) =>
     print('Error: $code\nError Message: $message');
 
+final GlobalKey<NavigatorState> navigatorKey = new GlobalKey<NavigatorState>();
+
 /// Returns a suitable camera icon for [direction].
 IconData getCameraLensIcon(CameraLensDirection direction) {
   switch (direction) {

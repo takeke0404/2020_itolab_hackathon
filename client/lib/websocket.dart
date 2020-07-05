@@ -2,11 +2,13 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import './camera.dart';
 
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
+
+import './util.dart';
+import './result.dart';
 
 //final String URL = "ws://133.68.108.164:7532"; // local
 final String URL = "ws://18.181.248.47:58822/";  // aws
@@ -18,6 +20,13 @@ class MyChannel {
   IOWebSocketChannel channel;
   List<List<String>> face_classes;
   List<List<String>> hands;
+  BuildContext context;
+
+  State result_listener;
+
+  void setResultListener(State s) {
+    result_listener = s;
+  }
 
   void match() {
     var json = jsonEncode({'type': 'Matching'});
@@ -42,20 +51,20 @@ class MyChannel {
     }
   }
 
-  var notify_state;
+  var websocket_listener;
 
   MyChannel(String URL, _WebSocketPageState s) {
     this.face_classes = [
-        ['angry', '😡'],
-        ['disgust', '💩'],
-        ['fear', '😱'],
-        ['happy', '😆'],
-        ['sad', '😭'],
-        ['surprise', '🙀'],
-        ['neutral', '😐']
+        ['angry'    , '😡'],
+        ['disgust'  , '😒'],
+        ['fear'     , '😱'],
+        ['happy'    , '😆'],
+        ['sad'      , '😭'],
+        ['surprise' , '😲'],
+        ['neutral'  , '😐']
     ];
 
-    this.notify_state = s;
+    this.websocket_listener = s;
     this._connect(URL);
   }
 
@@ -72,6 +81,7 @@ class MyChannel {
     }
   }
 
+  var result_flag = false;
 
   void listen(dynamic msg) {
     var json = jsonDecode(msg);
@@ -90,34 +100,59 @@ class MyChannel {
         break;
 
       case "Judgment":
+        switch(json["res"]) {
+          case "Not Face":
+            break;
+          case "Result":
+            _result(json);
+            break;
+        }
         break;
 
       case "Warning":
+        switch(json["res"]) {
+          case "Leave":
+            _leave();
+            break;
+          case "Not Image":
+            break;
+          case "Not Mathcing":
+            break;
+        }
         break;
     }
   }
 
   void _wait() {
-    notify_state.setLoadingFlag(false);
-    notify_state.setConnectionState("マッチング中✊");
-    print("wait");
+    websocket_listener.setLoadingFlag(true);
+    websocket_listener.setConnectionState("マッチング中...");
   }
 
   void _found(var json) {
-    notify_state.setLoadingFlag(false);
-    notify_state.setConnectionState("マッチング完了!!");
-    print("found");
+    websocket_listener.setLoadingFlag(false);
+    websocket_listener.setConnectionState("マッチング完了!!");
     this.hands = [face_classes[json["gu"]], face_classes[json["tyoki"]], face_classes[json["pa"]]];
-    print(this.hands[0][1]);
-    notify_state.setJankenHands(this.hands);
+    websocket_listener.setJankenHands(this.hands);
+  }
+
+  void _leave() {
+    // popUntilでエラーが出たので泣く泣くこれに...
+    while(navigatorKey.currentState.canPop()) {
+      navigatorKey.currentState.pop();
+    }
+  }
+
+  void _result(var json) {
+    if(result_listener != null) {
+      result_listener.setState(()
+      { this.result_flag = true; });
+    }
   }
 
   void close() {
     this.channel.sink.close();
   }
-
 }
-
 
 class WebSocketPage extends StatefulWidget {
   @override
@@ -135,16 +170,18 @@ class _WebSocketPageState extends State<WebSocketPage> {
       this.loading_flag = f;
     });
   }
-
   void setConnectionState(var s) {
     this.setState(() {
       this.connection_state = s;
     });
   }
-  void setJankenHands(var j) {
+  void setJankenHands(var j) async {
     this.setState(() {
       hands = j;
     });
+
+    await Future.delayed(new Duration(seconds: 2));
+    navigatorKey.currentState.pushNamed("/camera");
   }
 
   @override
@@ -158,7 +195,7 @@ class _WebSocketPageState extends State<WebSocketPage> {
   Widget build(BuildContext context) {
     return new Scaffold(
       appBar: new AppBar(
-        title: new Text('websocket'),
+        title: new Text('マッチング'),
       ),
       body: new ModalProgressHUD(
           child : new Container(
@@ -175,8 +212,7 @@ class _WebSocketPageState extends State<WebSocketPage> {
             ),
           ),
         inAsyncCall: this.loading_flag,
-        progressIndicator:  CircularProgressIndicator(semanticsLabel: "aaa",
-        )
+        progressIndicator:  CircularProgressIndicator()
       ),
     );
   }
@@ -185,43 +221,56 @@ class _WebSocketPageState extends State<WebSocketPage> {
     return Column(
         children: <Widget>[
           Text(connection_state),
-          RaisedButton(
-            onPressed: ()
-            => Navigator.of(context).pushNamed("/camera"),
-            child: new Text('cameraへ'),
-          ),
         ]
     );
   }
 
+
   var hands;
   Widget buildJanken2Face(BuildContext context) {
-    Widget getHandText(String hand, List<String> face) {
-      return Center(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+    return Center(
+      child: new Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          _getHandText("✊", hands[0]),
+          _getHandText("✌️", hands[1]),
+          _getHandText("✋", hands[2]),
+          _getHintText(),
+        ],
+      ),
+    );
+  }
+  Text _getHintText() {
+    return Text(
+        'カメラを起動します。',
+      style: TextStyle(fontSize: 20),
+    );
+  }
+
+  Widget _getHandText(String hand, List<String> face) {
+    return Padding(
+        padding: EdgeInsets.all(20.0),
+        child: Column(
           children: <Widget>[
-            Text(
-                "$hand : ${face[1]}",
-                style: TextStyle(
-                    fontSize: 50
-                )
+            Padding(
+              padding: EdgeInsets.all(5.0),
+              child: Text(
+                  "${face[0]}"
+              ),
             ),
-            Text(
-                "(${face[0]})"
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Text(
+                    "$hand : ${face[1]}",
+                    style: TextStyle(
+                        fontSize: 50
+                    )
+                ),
+              ],
             )
           ],
         )
-      );
-    }
-    return Center(
-      child: new Column(
-        children: <Widget>[
-          getHandText("✊", hands[0]),
-          getHandText("✌️", hands[1]),
-          getHandText("✋", hands[2]),
-        ],
-      ),
     );
   }
 
@@ -237,6 +286,11 @@ class _WebSocketPageState extends State<WebSocketPage> {
 }
 
 /*
+          RaisedButton(
+            child: new Text('cameraへ'),
+            onPressed: ()
+            => Get.to(CameraPage()),
+          ),
  @override
   Widget build(BuildContext context) {
     gl_channel = MyWebSocket(URL);

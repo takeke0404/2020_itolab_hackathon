@@ -5,6 +5,7 @@
 // ignore_for_file: public_member_api_docs
 
 import 'package:flutter/material.dart';
+import 'package:flutterapp/result.dart';
 import './websocket.dart';
 import './camera.dart';
 import './start.dart';
@@ -15,7 +16,6 @@ import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:path_provider/path_provider.dart';
-
 
 Future<void> main() async {
   // Fetch the available cameras before initializing the app.
@@ -33,7 +33,9 @@ class MyApp extends StatelessWidget {
         '/start' : (BuildContext context) => new StartPage(),
         '/websocket': (BuildContext context) => new WebSocketPage(),
         '/camera': (BuildContext context) => new CameraPage(),
+        '/result' : (BuildContext context) => new ResultPage(),
       },
+      navigatorKey: navigatorKey,
     );
   }
 }
