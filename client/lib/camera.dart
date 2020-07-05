@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import './util.dart';
 import './websocket.dart';
-
+import './result.dart';
 
 import 'dart:async';
 import 'dart:io';
@@ -107,11 +107,23 @@ class _CameraPageState extends State<CameraPage>
               Align(
                 alignment : Alignment(0.0, 0.8),
                 child: _captureControlRowWidget(),
-              )
+              ),
+              Align(
+                alignment: Alignment.topCenter,
+                child: getJanken2Face()
+              ),
             ],
           fit: StackFit.expand,
           ),
     );
+  }
+
+  Widget getJanken2Face() {
+    TextStyle s = TextStyle(fontSize: 35, color: Colors.black, backgroundColor: Color.fromARGB(100, 255, 255, 255));
+    String txt = "${gl_channel.janken[0]} : ${gl_channel.hands[0][1]}, "
+                  "${gl_channel.janken[1]} : ${gl_channel.hands[1][1]}, "
+                  "${gl_channel.janken[2]} : ${gl_channel.hands[2][1]}";
+    return Text(txt, style: s,);
   }
 
   /// Display the preview from the camera (or a message if the preview is not available).
@@ -203,30 +215,32 @@ class _CameraPageState extends State<CameraPage>
   }
 
   void confirmDialog() {
+    //navigatorKey.currentState.pop();
     Navigator.pop(context);
     gl_channel.sendImage(imagePath);
-    Navigator.pushNamed(context, '/result');
+    Navigator.of(context).pushReplacementNamed("/result");
   }
 
   Future _showDialog() async {
     var value = await showDialog(
         context: context,
         builder: (BuildContext context) => new AlertDialog(
-          title : new Text('dialog'),
+          title : new Text('送信の確認'),
           content: SingleChildScrollView (
             child : ListBody(
               children : <Widget> [
-                  image
+                Text("この写真を送信しますか?"),
+                image
               ]
             ),
           ),
             actions: <Widget> [
               FlatButton(
-                child: Text("Cancel"),
+                child: Text("Cancel", style: TextStyle(fontSize: 20),),
                 onPressed: () => Navigator.pop(context),
               ),
               FlatButton(
-                child: Text("OK"),
+                child: Text("OK", style: TextStyle(fontSize: 20),),
                 onPressed: confirmDialog,
               ),
             ]

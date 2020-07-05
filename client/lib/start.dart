@@ -17,7 +17,7 @@ class _StartPageState extends State<StartPage> {
   Widget build(BuildContext context) {
     return new Scaffold(
       appBar: new AppBar(
-        title: new Text('title'),
+        title: new Text('タイトル'),
       ),
       body:
       new Center(
@@ -30,11 +30,11 @@ class _StartPageState extends State<StartPage> {
               RaisedButton(
                 onPressed:
                     () => navigatorKey.currentState.pushNamed('/websocket'),
-                child: new Text('対戦相手を探す'),
+                child: new Text('対戦相手を探す', style:TextStyle(fontSize: 20)),
               ),
               RaisedButton(
                 onPressed: _showDialog,
-                child: new Text('ヘルプ'),
+                child: new Text('ヘルプ', style:TextStyle(fontSize: 20)),
               )
             ],
           ),
@@ -45,7 +45,7 @@ class _StartPageState extends State<StartPage> {
   void _showDialog() {
     var value = showDialog(context: context,
         builder: (BuildContext context) => new AlertDialog(
-            title : new Text('ヘルプ　'),
+            title : new Text('ヘルプ'),
             content: SingleChildScrollView (
               child : ListBody(
                   children : <Widget> [

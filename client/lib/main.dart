@@ -28,6 +28,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: "表情じゃんけん",
       home: StartPage(),
       routes: <String, WidgetBuilder> {
         '/start' : (BuildContext context) => new StartPage(),

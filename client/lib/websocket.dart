@@ -20,6 +20,7 @@ class MyChannel {
   IOWebSocketChannel channel;
   List<List<String>> face_classes;
   List<List<String>> hands;
+  List<String> janken;
   BuildContext context;
 
   State result_listener;
@@ -33,24 +34,6 @@ class MyChannel {
     this.send(json);
   }
 
-  void sendImage(String filePath) {
-    File f = new File(filePath);
-    List<int> bytes = f.readAsBytesSync();
-    var img_str = base64Encode(bytes);
-    var raw = {"type":"Judgment", "image" : img_str};
-    var json = jsonEncode(raw);
-    this.send(json);
-  }
-
-  void send(dynamic data) async {
-    if (channel != null) {
-      await this.channel.sink.add(data);
-    }
-    else {
-      print("channel null");
-    }
-  }
-
   var websocket_listener;
 
   MyChannel(String URL, _WebSocketPageState s) {
@@ -62,6 +45,9 @@ class MyChannel {
         ['sad'      , '😭'],
         ['surprise' , '😲'],
         ['neutral'  , '😐']
+    ];
+    this.janken = [
+      "✊", "✌️", "✋"
     ];
 
     this.websocket_listener = s;
@@ -141,18 +127,59 @@ class MyChannel {
       navigatorKey.currentState.pop();
     }
   }
+  /*
+  type":"Judgment","res": "Result","your_hand": 自分の手,"your_emotion": 自分の表情, "your_prob": 自分の確率, "hand": 相手の手,"emotion": 相手の表情, "prob": 相手の確率}
+   */
 
+  var result_data;
   void _result(var json) {
+    print(json);
+
+    this.result_data = {
+      "you" : {
+        "hand" :  json["your_hand"],
+        "class" : this.face_classes[json["your_emotion"]],
+        "prob" : double.parse(json["your_prob"]),
+      },
+      "opp" : {
+        "hand" : json["hand"],
+        "class" : this.face_classes[json["emotion"]],
+        "prob" : double.parse(json["prob"]),
+      }
+    };
+
     if(result_listener != null) {
       result_listener.setState(()
       { this.result_flag = true; });
     }
   }
 
+  void sendImage(String filePath) {
+    File f = new File(filePath);
+    List<int> bytes = f.readAsBytesSync();
+    var img_str = base64Encode(bytes);
+    var raw = {"type":"Judgment", "image" : img_str};
+    var json = jsonEncode(raw);
+    this.send(json);
+  }
+
+  void send(dynamic data) async {
+    if (channel != null) {
+      await this.channel.sink.add(data);
+    }
+    else {
+      print("channel null");
+    }
+  }
+
   void close() {
-    this.channel.sink.close();
+    if(this.channel != null) {
+      this.channel.sink.close();
+      this.channel = null;
+    }
   }
 }
+
 
 class WebSocketPage extends StatefulWidget {
   @override
@@ -232,9 +259,9 @@ class _WebSocketPageState extends State<WebSocketPage> {
       child: new Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          _getHandText("✊", hands[0]),
-          _getHandText("✌️", hands[1]),
-          _getHandText("✋", hands[2]),
+          getHandText("✊", hands[0]),
+          getHandText("✌️", hands[1]),
+          getHandText("✋", hands[2]),
           _getHintText(),
         ],
       ),
@@ -247,7 +274,7 @@ class _WebSocketPageState extends State<WebSocketPage> {
     );
   }
 
-  Widget _getHandText(String hand, List<String> face) {
+  Widget getHandText(String hand, List<String> face) {
     return Padding(
         padding: EdgeInsets.all(20.0),
         child: Column(
